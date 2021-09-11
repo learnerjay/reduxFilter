@@ -1,5 +1,9 @@
 
 import generate from "../helpers/data";
+const initialState = {
+    appliedFilters: []
+};
+
 const SORT_BY_ALPHABET = "SORT_BY_ALPHABET";
 const SORT_BY_PRICE = "SORT_BY_PRICE";
 const LOAD_DATA = "LOAD_DATA";
@@ -28,17 +32,26 @@ export const loadData = payload => ({
     payload
 });
 
-
-
-const initialState = {
-    appliedFilters: []
-};
 const filterStore = (state = initialState, action) => {
     switch(action.type){
-        case SORT_BY_ALPHABET :
-            return state;
+        case SORT_BY_ALPHABET:
+            let sortedArr = action.payload.direction === "asc" ?
+                sortAsc(state.filteredProducts, 'name') :
+                sortDesc(state.filteredProducts, 'name');
+            
+            return {
+                ...state,
+                filteredProducts: sortedArr
+            };
         case SORT_BY_PRICE :
-            return state;
+            let sortedArr2 = action.payload.direction === "asc" ?
+                sortAsc(state.filteredProducts, 'price') :
+                sortDesc(state.filteredProducts, 'price');
+
+            return {
+                ...state,
+                filteredProducts: sortedArr2
+            };
         case FILTER_BY_PRICE :
             return state;
         case LOAD_DATA :
@@ -48,38 +61,55 @@ const filterStore = (state = initialState, action) => {
                 ...state,
                 products
             };
-        case FILTER_BY_VALUE :
-            let newState = Object.assign({},state);
-            let value = action.payload.value;
-            let filterValues = state.products.filter(product => {
-                return product.name.toLowerCase().includes(value) ||
-                product.designer.toLowerCase().includes(value);
-
-            }); 
-            
-            let appliedFilters = state.appliedFilters;
-            if(value){
-                let index = appliedFilters.indexOf(FILTER_BY_VALUE);
-                if(index === -1)
-                    appliedFilters.push(FILTER_BY_VALUE);
-                newState.filterProducts = filterValues;
-            }else{
-                let index = appliedFilters.indexOf(FILTER_BY_VALUE);
-                appliedFilters.splice(index,1);
-                if(appliedFilters.length === 0){
-                    newState.filterProducts = newState.products;
-                }
-            }
-            return newState;
-            /*
-            return {
-                ...state,
-                products: filterValues,
-            };
-            */
-            
-        default :
+                
+            case FILTER_BY_VALUE:
+               
+               let newState = Object.assign({}, state);
+               let value = action.payload.value;
+               let filteredValues = state.products.filter(product => {
+                   return product.name.toLowerCase().includes(value) ||
+                       product.designer.toLowerCase().includes(value);
+               });
+             
+               let appliedFilters = state.appliedFilters;
+               if (value) {
+                   let index = appliedFilters.indexOf(FILTER_BY_VALUE);
+                   if (index===-1)
+                       appliedFilters.push(FILTER_BY_VALUE);
+                   //change the filtered products to reflect the change
+                   newState.filteredProducts = filteredValues;
+               } else {
+                   let index = appliedFilters.indexOf(FILTER_BY_VALUE);
+                   appliedFilters.splice(index, 1);
+                   if (appliedFilters.length === 0) {
+                       newState.filteredProducts = newState.products;
+                   }
+               }
+               return newState;
+                   
+        
+            default :
             return state;
+        
     }
 };
 export default filterStore;
+function sortAsc(arr, field) {
+    return arr.sort(function (a, b) {
+        if (a[field] > b[field]) return 1;
+
+        if (b[field]> a[field]) return -1;
+
+        return 0;
+    })
+}
+
+function sortDesc(arr, field) {
+    return arr.sort(function (a, b) {
+        if (a[field] > b[field]) return -1;
+
+        if (b[field]> a[field]) return 1;
+
+        return 0;
+    })
+}
